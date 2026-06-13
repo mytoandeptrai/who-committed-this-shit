@@ -1,11 +1,9 @@
-import { divide, multiply } from '@/lib/calc';
 import type { RoundType } from '@/types';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import timezone from 'dayjs/plugin/timezone';
-import Decimal from 'decimal.js';
 import { toast } from 'sonner';
 import { FILE_FORMAT, NUMBER_FORMAT_LOOK_UP } from './const';
 
@@ -16,10 +14,6 @@ dayjs.extend(advancedFormat);
 
 export const range = (start: number, end: number) => {
   const length = end - start + 1;
-  /*
-        Create an array of certain length and set the elements within it from
-      start value to end value.
-    */
   return Array.from({ length }, (_, idx) => idx + start);
 };
 
@@ -62,155 +56,6 @@ export const handleToastError = (error: any, defaultError = 'Something went wron
   toast.error(error?.shortMessage ?? error?.message ?? error?.cause?.message ?? defaultError);
 };
 
-const DEFAULT_MINIMUM_FRACTION_DIGITS = 2;
-const DEFAULT_MAXIMUM_FRACTION_DIGITS = 5;
-const EXTRA_DECIMAL_PRECISION = 10;
-
-const normalizeDecimalValue = (value: string | number) => String(value).trim().replaceAll(',', '');
-
-const getSignificantDigitCount = (value: string | number) => {
-  const coefficient = normalizeDecimalValue(value).replace(/[eE][+-]?\d+$/, '');
-  const digits = coefficient.replace(/^[+-]/, '').replace('.', '').replace(/^0+/, '');
-
-  return digits.length || 1;
-};
-
-const getPreciseDecimalConstructor = (value: string | number, extraPrecision = 0) =>
-  Decimal.clone({
-    precision: Math.max(Decimal.precision, getSignificantDigitCount(value) + extraPrecision + EXTRA_DECIMAL_PRECISION),
-  });
-
-const getDecimalRoundingMode = (roundingMode?: Intl.NumberFormatOptions['roundingMode']) => {
-  switch (roundingMode) {
-    case 'ceil':
-      return Decimal.ROUND_CEIL;
-    case 'floor':
-      return Decimal.ROUND_FLOOR;
-    case 'expand':
-      return Decimal.ROUND_UP;
-    case 'trunc':
-      return Decimal.ROUND_DOWN;
-    case 'halfCeil':
-      return Decimal.ROUND_HALF_CEIL;
-    case 'halfFloor':
-      return Decimal.ROUND_HALF_FLOOR;
-    case 'halfEven':
-      return Decimal.ROUND_HALF_EVEN;
-    case 'halfTrunc':
-      return Decimal.ROUND_HALF_DOWN;
-    default:
-      return Decimal.ROUND_HALF_UP;
-  }
-};
-
-const getNumberSeparators = (locale?: Intl.LocalesArgument) => {
-  const parts = new Intl.NumberFormat(locale || 'en-US').formatToParts(1000.1);
-
-  return {
-    group: parts.find((part) => part.type === 'group')?.value || ',',
-    decimal: parts.find((part) => part.type === 'decimal')?.value || '.',
-  };
-};
-
-const formatFixedDecimal = (
-  fixedValue: string,
-  locale: Intl.LocalesArgument | undefined,
-  minimumFractionDigits: number,
-  options?: Intl.NumberFormatOptions
-) => {
-  const [rawIntegerPart, rawFractionPart = ''] = fixedValue.split('.');
-  const sign = rawIntegerPart.startsWith('-') ? '-' : '';
-  const integerPart = rawIntegerPart.replace(/^-/, '');
-  const { group, decimal } = getNumberSeparators(locale);
-  const groupedIntegerPart =
-    options?.useGrouping === false ? integerPart : integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, group);
-
-  if (/^0*$/.test(rawFractionPart)) {
-    return `${sign}${groupedIntegerPart}`;
-  }
-
-  const trimmedFractionPart = rawFractionPart.replace(/0+$/, '');
-  const fractionPart = trimmedFractionPart.padEnd(minimumFractionDigits, '0');
-
-  return `${sign}${groupedIntegerPart}${decimal}${fractionPart}`;
-};
-
-const formatPreciseDecimal = (
-  value: string | number,
-  locale?: Intl.LocalesArgument,
-  options?: Intl.NumberFormatOptions
-) => {
-  const minimumFractionDigits = options?.minimumFractionDigits ?? DEFAULT_MINIMUM_FRACTION_DIGITS;
-  const maximumFractionDigits = Math.max(
-    options?.maximumFractionDigits ?? DEFAULT_MAXIMUM_FRACTION_DIGITS,
-    minimumFractionDigits
-  );
-  const DecimalConstructor = getPreciseDecimalConstructor(value, maximumFractionDigits);
-  const decimalValue = new DecimalConstructor(normalizeDecimalValue(value));
-
-  if (!decimalValue.isFinite()) {
-    throw new Error('Invalid decimal value');
-  }
-
-  const fixedValue = decimalValue
-    .toDecimalPlaces(maximumFractionDigits, getDecimalRoundingMode(options?.roundingMode))
-    .toFixed(maximumFractionDigits);
-
-  return formatFixedDecimal(fixedValue, locale, minimumFractionDigits, options);
-};
-
-export function numberFormatter(
-  num: string | number,
-  digits = 2,
-  roundType: RoundType = 'floor',
-  options?: Intl.NumberFormatOptions
-): string {
-  if (num === null || num === undefined || num === '') return '0';
-
-  const DecimalConstructor = getPreciseDecimalConstructor(num, digits);
-  let decimalNum: Decimal;
-
-  try {
-    decimalNum = new DecimalConstructor(normalizeDecimalValue(num));
-  } catch {
-    return '0';
-  }
-
-  if (!decimalNum.isFinite() || decimalNum.isZero()) return '0';
-
-  const absNum = decimalNum.abs();
-  const regexp = /\.0+$|(?<=\.[0-9]*[1-9])0+$/;
-
-  const item = NUMBER_FORMAT_LOOK_UP.findLast((item) => absNum.greaterThanOrEqualTo(item.value));
-
-  const value = item ? decimalNum.div(item.value) : decimalNum;
-
-  const power = new DecimalConstructor(10).pow(digits);
-
-  let rounded: Decimal;
-  switch (roundType) {
-    case 'floor':
-      rounded = value.mul(power).floor().div(power);
-      break;
-    case 'ceil':
-      rounded = value.mul(power).ceil().div(power);
-      break;
-    case 'round':
-      rounded = value.toDecimalPlaces(digits, Decimal.ROUND_HALF_UP);
-      break;
-    default:
-      rounded = value;
-  }
-
-  const fixed = rounded.toFixed(digits);
-  const formatted = fixed.replace(regexp, '');
-
-  const result = item
-    ? formatNumber(formatted, undefined, options) + item.symbol
-    : formatNumber(formatted, undefined, options);
-  return result;
-}
-
 export const sleep = async (time: number) => {
   return new Promise<void>((resolve) =>
     setTimeout(() => {
@@ -236,45 +81,51 @@ export function formatDuration(ms: number) {
   return parts.join(' ');
 }
 
+const DEFAULT_MINIMUM_FRACTION_DIGITS = 2;
+const DEFAULT_MAXIMUM_FRACTION_DIGITS = 5;
+
 export const formatNumber = (
   value: number | string,
   locale?: Intl.LocalesArgument,
   options?: Intl.NumberFormatOptions
 ): string => {
-  try {
-    return formatPreciseDecimal(value, locale, options);
-  } catch {
-    // Fall back to Intl for non-decimal values such as NaN.
-  }
+  const num = typeof value === 'string' ? Number.parseFloat(value.replace(',', '')) : value;
+  if (!Number.isFinite(num)) return '0';
 
-  const formattedValue = new Intl.NumberFormat(locale || 'en-US', {
+  return new Intl.NumberFormat((locale as string) || 'en-US', {
     minimumFractionDigits: DEFAULT_MINIMUM_FRACTION_DIGITS,
     maximumFractionDigits: DEFAULT_MAXIMUM_FRACTION_DIGITS,
     ...options,
-  }).format(value as any);
-
-  const [integerPart, decimalPart] = formattedValue.split('.');
-
-  if (decimalPart === '00') {
-    return integerPart;
-  }
-
-  return formattedValue;
+  }).format(num);
 };
 
-/**
- * Generate a random HEX color code
- * @returns {string} HEX color code (e.g. "#A3F5C2")
- */
+export function numberFormatter(
+  num: string | number,
+  digits = 2,
+  _roundType: RoundType = 'floor',
+  options?: Intl.NumberFormatOptions
+): string {
+  if (num === null || num === undefined || num === '') return '0';
+  const parsed = typeof num === 'string' ? Number.parseFloat(num.replace(',', '')) : num;
+  if (!Number.isFinite(parsed) || parsed === 0) return '0';
+
+  const abs = Math.abs(parsed);
+  const item = NUMBER_FORMAT_LOOK_UP.findLast((i) => abs >= i.value);
+  const display = item ? parsed / item.value : parsed;
+
+  const formatted = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: digits,
+    ...options,
+  }).format(display);
+
+  return item ? `${formatted}${item.symbol}` : formatted;
+}
+
 export function generateRandomHexColor(): string {
   const randomColor = Math.floor(Math.random() * 0xffffff);
   const hex = randomColor.toString(16).padStart(6, '0');
   return `#${hex.toUpperCase()}`;
-}
-
-export function toFixedDown(value: number, decimals: number): number {
-  const factor = 10 ** decimals;
-  return divide(Math.floor(multiply(value, factor).toNumber()), factor).toNumber();
 }
 
 export function getParamsFromUrl<T extends Record<string, any>>(
@@ -362,12 +213,10 @@ export const uppercaseFirstLetter = (str: string): string => {
   return str.replace(/\b\w/g, (match) => match.toUpperCase());
 };
 
-// Largest-remainder rounding to 2 decimals — guarantees the values sum to exactly 100.
 export const normalizeTo100 = (values: number[]): number[] => {
   const total = values.reduce((acc, v) => acc + v, 0);
   if (total <= 0) return values.map(() => 0);
 
-  // Work in hundredths-of-a-percent so 2 decimals can be handled as integers.
   const scaled = values.map((v) => (v / total) * 10000);
   const floored = scaled.map((v) => Math.floor(v));
   let remainder = 10000 - floored.reduce((acc, v) => acc + v, 0);

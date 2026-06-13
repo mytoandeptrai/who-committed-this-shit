@@ -1,0 +1,34 @@
+---
+title: 'Getting Started with a Personal Blog using Next.js and MDX'
+date: '2026-06-13'
+tags: ['Next.js', 'MDX', 'Blog']
+series: null
+coverImage: ''
+draft: false
+excerpt: 'The journey of building a personal blog with Next.js 15, MDX, and Tailwind CSS v4.'
+---
+
+## Introduction
+
+This is the first post on my personal blog. Built with **Next.js 15**, **MDX**, and **Tailwind CSS v4**.
+
+## Tech stack
+
+- **Next.js 15** with App Router
+- **MDX** via `next-mdx-remote` + `gray-matter`
+- **Tailwind CSS v4** for styling
+- **shadcn/ui** for UI components
+- **Shiki** for syntax highlighting
+
+## Code example
+
+```typescript
+import { getAllPosts } from '@/modules/blog/lib/posts';
+
+const posts = await getAllPosts('en');
+console.log(posts.length); // number of posts
+```
+
+## Conclusion
+
+Simple blog, content-first. No admin UI, no database — just push to git and it deploys.

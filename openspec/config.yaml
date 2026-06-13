@@ -1,39 +1,62 @@
 schema: spec-driven
 
 context: |
-
   Language: Vietnamese
   Tài liệu viết bằng Tiếng Việt. Source code, API names, DB table names, class names giữ tiếng Anh.
 
+  Tech stack:
+    Next.js 15, React 19, TypeScript
+    Tailwind CSS v4, shadcn/ui (style: new-york, baseColor: neutral, cssVariables: true)
+    next-intl v4 (localePrefix: never, default locale: vi)
+    Zustand v5 + auto-zustand-selectors-hook
+    TanStack Query v5
+    React Hook Form + Zod (form validation)
+    Framer Motion (animations)
+    date-fns + dayjs (date formatting)
+    Lucide React (icons), Sonner (toast), next-themes (dark/light)
+    Biome v2 (lint + format): single quotes, 2-space indent, 120 char line width
+    Conventional commits: feat | fix | chore | docs | refactor | perf | style
+
+  Domain: Personal technical blog
+    File-based MDX dùng next-mdx-remote + gray-matter
+    Bilingual posts: mỗi bài có index.vi.mdx và index.en.mdx trong content/posts/<slug>/
+    Deploy trên Vercel
+
+  Architecture: Module-based
+    App Router chỉ là entry point — src/app/[locale]/(app)/<route>/page.tsx
+    Business logic và UI nằm trong src/modules/<feature>/
+
+    Cấu trúc mỗi module:
+      modules/<feature>/
+        containers/   — business logic: gọi API, quản lý state, dùng hooks
+        components/   — UI thuần: chỉ nhận props, không gọi API
+        hooks/        — custom hooks của module
+        contexts/     — shared state trong phạm vi module
+        lib/          — utils, helpers, mappers, constants, validation
+
+    Naming convention (kebab-case):
+      Container: blog-list-container.tsx
+      Component: blog-item-ui.tsx (suffix -ui)
+      Hook:      use-blog-list.ts
+
+    Mỗi container/component có folder riêng với index.ts:
+      containers/blog-list-container/
+        blog-list-container.tsx
+        blog-list-container.config.ts
+        index.ts
 
 rules:
   proposal:
-    - Liệt kê rõ component(s) bị ảnh hưởng 
     - Giới hạn 400 từ
+    - Bắt buộc có mục Non-goals
+    - Liệt kê rõ module(s) bị ảnh hưởng (không chỉ file — phải ghi tên module thư mục)
   specs:
     - Mỗi scenario: WHEN <trigger> THEN <expected outcome>, bao gồm cả error cases
     - Nếu liên quan API: ghi rõ HTTP method, path, request/response shape
+    - Không đặt tên scenario chung chung như "Happy path" hay "Error case"
   design:
-    - Có mục "Component Mapping": file/package nào trong component nào cần thay đổi
+    - Có mục "Component Mapping": module nào, file nào cần tạo hoặc thay đổi
   tasks:
-    - Nhóm theo component
-    - Mỗi task ≤ 2 giờ; task test là task riêng
-
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
-
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+    - Nhóm theo module (ví dụ: ## 1. modules/blog/containers)
+    - Mỗi task ≤ 2 giờ; task test là task riêng biệt
+    - Mỗi task phải gọi tên file cụ thể — không viết task chung chung

@@ -31,20 +31,31 @@ Project được scaffold dưới dạng Web3 dApp (RainbowKit + wagmi) nhưng m
 
 Không có — blog là layer mới trên nền codebase đã strip.
 
+## Non-goals
+
+- Admin UI / dashboard quản lý bài viết
+- Auth cho readers
+- View count, like/reaction, newsletter subscription
+- CMS headless (Sanity, Notion, Contentful)
+- Trang `/projects` hoặc `/snippets`
+
 ## Impact
 
-**Components bị ảnh hưởng:**
+**Modules bị ảnh hưởng:**
 
-| Component | Thay đổi |
-|-----------|----------|
-| `src/providers/WalletContextProvider.tsx` | Xóa |
+| Module | Thay đổi |
+|--------|----------|
+| `src/modules/blog/` | Tạo mới — containers, components, hooks, lib cho toàn bộ blog |
+| `src/modules/blog/lib/posts.ts` | Tạo mới — content layer (getAllPosts, getPostBySlug) |
+| `src/app/[locale]/(app)/blog/` | Tạo mới — entry point, import từ modules/blog |
+| `src/app/[locale]/(app)/about/` | Tạo mới — entry point |
+| `src/app/[locale]/(app)/uses/` | Tạo mới — entry point |
+| `src/app/api/` | Xóa BFF proxy; thêm `/rss.xml` và `/og` route handlers |
+| `src/providers/` | Xóa WalletContextProvider; rebuild provider tree |
 | `src/config/wagmi.ts` | Xóa |
-| `src/stores/sessionStore.ts`, `modalStore.ts` | Xóa (nếu Web3-specific) |
-| `src/app/[locale]/(app)/` | Repurpose thành blog route group |
-| `src/app/api/` | Xóa BFF proxy; thêm `/rss` và `/og` routes |
-| `src/providers/index.tsx` | Xây lại provider tree không có wagmi |
+| `src/stores/` | Xóa sessionStore, modalStore (Web3-specific) |
 | `content/posts/` | Tạo mới — chứa toàn bộ MDX posts |
 
-**Packages xóa:** `wagmi`, `viem`, `@rainbow-me/rainbowkit`
+**Packages xóa:** `wagmi`, `viem`, `@rainbow-me/rainbowkit`, `socket.io-client`, `recharts`, `decimal.js`
 
-**Packages thêm:** `next-mdx-remote`, `gray-matter`, `fuse.js`, `feed`, `shiki`, `reading-time`
+**Packages thêm:** `next-mdx-remote`, `gray-matter`, `fuse.js`, `feed`, `shiki`, `rehype-pretty-code`, `reading-time`

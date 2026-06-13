@@ -1,6 +1,6 @@
 export const ROUTES = {
   HOME: '/',
-  SWAP: '/swap',
-  CLIENT_REQUEST: '/client-request',
-  SERVER_REQUEST: '/server-request',
+  BLOG: '/blog',
+  ABOUT: '/about',
+  USES: '/uses',
 } as const;

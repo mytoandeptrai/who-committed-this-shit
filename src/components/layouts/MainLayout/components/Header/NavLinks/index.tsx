@@ -8,15 +8,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import Text from '@/components/ui/text';
 import { HStack, VStack } from '@/components/utilities';
 import { ROUTES } from '@/utils/routes';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Link from 'next/link';
 import { useState } from 'react';
 import Footer from '../../Footer';
 
 const nav_links = [
-  { label: 'Home', href: ROUTES.HOME },
-  { label: 'Client Request', href: ROUTES.CLIENT_REQUEST },
-  { label: 'Server Request', href: ROUTES.SERVER_REQUEST },
+  { label: 'Blog', href: ROUTES.BLOG },
+  { label: 'About', href: ROUTES.ABOUT },
+  { label: 'Uses', href: ROUTES.USES },
 ];
 
 const NavLinks = () => {
@@ -79,7 +78,6 @@ const MobileNavLinks = () => {
 
               <VStack spacing={16} className='border-t border-t-border p-4'>
                 <HStack spacing={8}>
-                  <ConnectButton />
                   <ThemeToggle />
                   <LanguageSwitcher />
                 </HStack>

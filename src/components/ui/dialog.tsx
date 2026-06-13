@@ -5,7 +5,6 @@ import type * as React from 'react';
 
 import { Icons } from '@/assets/icons';
 import { cn } from '@/lib/utils';
-import { useModalStore } from '@/stores';
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot='dialog' {...props} />;
@@ -64,11 +63,9 @@ function DialogContent({
     onInteractOutside?.(e);
   };
 
-  const resetTargetInView = useModalStore.use.resetTargetInView();
-
   return (
     <DialogPortal data-slot='dialog-portal'>
-      <DialogOverlay onClick={disabledClickOutside ? undefined : resetTargetInView} />
+      <DialogOverlay />
       <DialogPrimitive.Content
         data-slot='dialog-content'
         tabIndex={-3}

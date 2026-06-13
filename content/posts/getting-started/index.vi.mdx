@@ -1,0 +1,34 @@
+---
+title: 'Bắt đầu với blog cá nhân dùng Next.js và MDX'
+date: '2026-06-13'
+tags: ['Next.js', 'MDX', 'Blog']
+series: null
+coverImage: ''
+draft: false
+excerpt: 'Hành trình xây dựng blog cá nhân với Next.js 15, MDX và Tailwind CSS v4.'
+---
+
+## Giới thiệu
+
+Đây là bài viết đầu tiên trên blog cá nhân của tôi. Blog được xây dựng bằng **Next.js 15**, **MDX** và **Tailwind CSS v4**.
+
+## Tech stack
+
+- **Next.js 15** với App Router
+- **MDX** thông qua `next-mdx-remote` + `gray-matter`
+- **Tailwind CSS v4** cho styling
+- **shadcn/ui** cho UI components
+- **Shiki** cho syntax highlighting
+
+## Code example
+
+```typescript
+import { getAllPosts } from '@/modules/blog/lib/posts';
+
+const posts = await getAllPosts('vi');
+console.log(posts.length); // số bài viết
+```
+
+## Kết luận
+
+Blog đơn giản, tập trung vào nội dung. Không có admin UI, không có database — chỉ cần push git là deploy.

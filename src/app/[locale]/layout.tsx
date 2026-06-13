@@ -3,7 +3,6 @@ import { fontEBGaramond, fontMono, fontOpenSauceOne, fontSans } from '@/config/f
 import { isProductionEnv, siteConfig } from '@/config/site';
 import { routing } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
-import WalletContextProvider from '@/providers/WalletContextProvider';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import type { Metadata, Viewport } from 'next';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
@@ -104,9 +103,7 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
       >
         <ThemeProvider>
           <NextIntlClientProvider>
-            <WalletContextProvider>
-              <Providers>{children}</Providers>
-            </WalletContextProvider>
+            <Providers>{children}</Providers>
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>

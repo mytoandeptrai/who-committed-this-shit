@@ -5,7 +5,6 @@ import type * as React from 'react';
 
 import { Icons } from '@/assets/icons';
 import { cn } from '@/lib/utils';
-import { useModalStore } from '@/stores';
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot='sheet' {...props} />;
@@ -30,12 +29,9 @@ function SheetOverlay({
 }: React.ComponentProps<typeof SheetPrimitive.Overlay> & {
   showCloseButton?: boolean;
 }) {
-  const resetTargetInView = useModalStore.use.resetTargetInView();
-
   return (
     <SheetPrimitive.Overlay
       data-slot='sheet-overlay'
-      onClick={resetTargetInView}
       className={cn(
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-104 bg-[#666666] data-[state=closed]:animate-out data-[state=open]:animate-in',
         className

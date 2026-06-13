@@ -1,6 +1,6 @@
 ## Context
 
-Project hiện tại là Next.js 14 App Router scaffold dưới dạng Web3 dApp với RainbowKit + wagmi + viem, next-intl (localePrefix: `'never'`, locale mặc định `vi`), Zustand stores, Axios BFF proxy, và Biome cho linting. Chưa có bài viết, không có content layer. Cần xóa toàn bộ Web3 và xây blog MDX từ đầu trên nền codebase này.
+Project hiện tại là Next.js 15 App Router scaffold dưới dạng Web3 dApp với RainbowKit + wagmi + viem, next-intl v4 (localePrefix: `'never'`, locale mặc định `vi`), Zustand v5, Axios BFF proxy, và Biome v2 cho linting. Chưa có bài viết, không có content layer. Cần xóa toàn bộ Web3 và xây blog MDX từ đầu trên nền codebase này theo Module-based Architecture.
 
 ## Goals / Non-Goals
 
@@ -71,28 +71,55 @@ WagmiProvider và QueryClientProvider riêng của wagmi bị xóa. QueryClientP
 
 ## Component Mapping
 
-| File / Package | Thay đổi | Ghi chú |
-|---|---|---|
-| `src/config/wagmi.ts` | **Xóa** | |
-| `src/providers/WalletContextProvider.tsx` | **Xóa** | |
-| `src/app/[locale]/providers.tsx` | **Sửa** | Xóa WagmiProvider + wagmi QueryClient |
-| `src/stores/sessionStore.ts` | **Xóa** | Web3 session store |
-| `src/stores/modalStore.ts` | **Xóa** | Web3 modal store |
-| `src/api/axios.ts` | **Xóa hoặc giữ** | Giữ nếu cần gọi API ngoài; xóa nếu không dùng |
-| `src/api/_example/` | **Xóa** | Không cần API layer cho blog |
-| `src/app/api/_example/` | **Xóa** | BFF proxy example |
-| `src/app/[locale]/(app)/` | **Sửa** | Xóa web3 pages; thêm `/blog`, `/about`, `/uses` |
-| `src/app/[locale]/(landing)/` | **Xóa hoặc giữ** | Xóa nếu không cần landing page riêng |
-| `src/app/sitemap.ts` | **Sửa** | Implement sitemap thực tế |
-| `src/app/robots.ts` | **Sửa** | Implement robots thực tế |
-| `src/app/og/route.tsx` | **Tạo mới** | OG image ImageResponse endpoint |
-| `src/app/rss.xml/route.ts` | **Tạo mới** | RSS feed route handler |
-| `content/posts/` | **Tạo mới** | Thư mục chứa toàn bộ MDX posts |
-| `content/pages/` | **Tạo mới** | MDX cho /about và /uses |
-| `src/lib/posts.ts` | **Tạo mới** | `getAllPosts()`, `getPostBySlug()`, `getPostSeries()` |
-| `src/components/blog/` | **Tạo mới** | `PostCard`, `PostList`, `TOC`, `SeriesNav`, `GiscusWidget` |
-| `src/components/layout/Navbar.tsx` | **Sửa/Tạo** | Xóa ConnectButton; thêm language switcher, dark/light toggle |
-| `package.json` | **Sửa** | Xóa wagmi/viem/rainbowkit; thêm next-mdx-remote, gray-matter, shiki, fuse.js, feed, reading-time |
+**Xóa (Web3 cleanup):**
+
+| Module / File | Thay đổi |
+|---|---|
+| `src/config/wagmi.ts` | **Xóa** |
+| `src/providers/WalletContextProvider.tsx` | **Xóa** |
+| `src/stores/sessionStore.ts` | **Xóa** |
+| `src/stores/modalStore.ts` | **Xóa** |
+| `src/api/axios.ts`, `src/api/_example/` | **Xóa** |
+| `src/app/api/_example/` | **Xóa** |
+| `src/app/[locale]/(app)/client-request/` | **Xóa** |
+| `src/app/[locale]/(app)/server-request/` | **Xóa** |
+| `src/app/[locale]/(landing)/` | **Xóa** |
+
+**Sửa (infrastructure):**
+
+| Module / File | Thay đổi |
+|---|---|
+| `src/app/[locale]/providers.tsx` | Xóa WagmiProvider + wagmi QueryClient khỏi provider tree |
+| `src/app/sitemap.ts` | Implement sitemap thực tế cho blog |
+| `src/app/robots.ts` | Implement robots.txt thực tế |
+| `package.json` | Xóa wagmi/viem/rainbowkit/socket.io/recharts/decimal.js; thêm next-mdx-remote, gray-matter, shiki, rehype-pretty-code, fuse.js, feed, reading-time |
+
+**Tạo mới (blog module):**
+
+| Module / File | Vai trò |
+|---|---|
+| `src/modules/blog/lib/posts.ts` | Content layer: `getAllPosts()`, `getPostBySlug()`, `getPostSeries()` |
+| `src/modules/blog/lib/search-index.ts` | Build Fuse.js index từ posts |
+| `src/modules/blog/containers/blog-list-container/` | Business logic trang /blog: fetch posts, search state, tag filter state |
+| `src/modules/blog/containers/blog-detail-container/` | Business logic trang /blog/[slug]: fetch post, TOC parsing, available locales |
+| `src/modules/blog/components/post-card-ui/` | UI card bài viết (title, date, tags, reading time, cover image) |
+| `src/modules/blog/components/post-list-ui/` | UI danh sách bài + search input + tag cloud |
+| `src/modules/blog/components/toc-ui/` | UI Table of Contents, highlight active heading |
+| `src/modules/blog/components/series-nav-ui/` | UI navigation bài trong series |
+| `src/modules/blog/components/giscus-widget-ui/` | UI Giscus comment widget (lazy-load) |
+| `src/modules/blog/hooks/use-blog-search.ts` | Fuse.js search logic |
+| `src/modules/blog/hooks/use-toc-observer.ts` | IntersectionObserver cho TOC active state |
+| `src/modules/layout/components/navbar-ui/` | Navbar: links, language switcher, dark/light toggle |
+| `src/app/[locale]/(app)/blog/page.tsx` | Entry point /blog — import BlogListContainer |
+| `src/app/[locale]/(app)/blog/[slug]/page.tsx` | Entry point /blog/[slug] — import BlogDetailContainer |
+| `src/app/[locale]/(app)/about/page.tsx` | Entry point /about |
+| `src/app/[locale]/(app)/uses/page.tsx` | Entry point /uses |
+| `src/app/og/route.tsx` | OG image ImageResponse endpoint |
+| `src/app/rss.xml/route.ts` | RSS feed route handler |
+| `content/posts/<slug>/index.vi.mdx` | MDX posts tiếng Việt |
+| `content/posts/<slug>/index.en.mdx` | MDX posts tiếng Anh |
+| `content/pages/about.vi.mdx`, `about.en.mdx` | Nội dung trang /about |
+| `content/pages/uses.vi.mdx`, `uses.en.mdx` | Nội dung trang /uses |
 
 ## Risks / Trade-offs
 
