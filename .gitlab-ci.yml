@@ -1,0 +1,24 @@
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: never
+    - when: always
+
+include:
+  - project: foundation/templates/ci-template
+    file: secret-detection.yml
+  - project: foundation/templates/ci-template
+    file: frontend-no-build-ci.yml
+    inputs:
+      branch: dev
+  - project: foundation/templates/ci-template
+    file: update-manifest.yml
+
+variables:
+  DOCKERFILE_DIR: docker
+
+stages:
+  - scan_secret
+  - test
+  - dockerize
+  - deploy

@@ -1,0 +1,39 @@
+schema: spec-driven
+
+context: |
+
+  Language: Vietnamese
+  Tài liệu viết bằng Tiếng Việt. Source code, API names, DB table names, class names giữ tiếng Anh.
+
+
+rules:
+  proposal:
+    - Liệt kê rõ component(s) bị ảnh hưởng 
+    - Giới hạn 400 từ
+  specs:
+    - Mỗi scenario: WHEN <trigger> THEN <expected outcome>, bao gồm cả error cases
+    - Nếu liên quan API: ghi rõ HTTP method, path, request/response shape
+  design:
+    - Có mục "Component Mapping": file/package nào trong component nào cần thay đổi
+  tasks:
+    - Nhóm theo component
+    - Mỗi task ≤ 2 giờ; task test là task riêng
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
